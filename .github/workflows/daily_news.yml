@@ -1,0 +1,41 @@
+name: AI Daily News Agent
+
+# 触发条件：每天 UTC 时间 0点 (北京时间早上8点) 自动运行
+# 或手动点击 "Run workflow" 按钮触发
+on:
+  schedule:
+    - cron: '0 0 * * *' 
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests feedparser openai python-dotenv
+
+      - name: Run Agent
+        env:
+          # 这里引用 GitHub Secrets 里的 API Key
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          python main.py
+
+      # 将生成的 Markdown 文件发布到 Job Summary (最简单的查看方式)
+      - name: Publish Report
+        if: always()
+        run: |
+          # 假设你的脚本生成了以 AI_Brief 开头的文件
+          cat AI_Brief_*.md >> $GITHUB_STEP_SUMMARY
