@@ -6,6 +6,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from feishu_uploader import create_feishu_doc
+
 # 加载环境变量
 load_dotenv()
 
@@ -112,11 +114,17 @@ def main():
     
     # 1. 获取数据
     paper_data = fetch_huggingface_papers()
-    hn_data = fetch_hacker_news()
+    hn_data = fetch_hacker_news(limit=50)
     
     # 2. 生成报告
     report = generate_report(hn_data, paper_data)
     
+    doc_title = f"AI日报 - {datetime.now().strftime('%Y-%m-%d')}"
+    public_url = create_feishu_doc(doc_title, report)
+
+    if public_url:
+        print(f"\n 你的日报已发布！你可以复制下面的链接发给朋友：")
+        print(f">>> {public_url} <<<")
     # 3. 保存文件
     filename = f"AI_Brief_{datetime.now().strftime('%Y-%m-%d')}.md"
     with open(filename, "w", encoding="utf-8") as f:
