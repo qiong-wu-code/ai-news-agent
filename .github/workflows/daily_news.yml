@@ -34,8 +34,22 @@ jobs:
           python main.py
 
       # 将生成的 Markdown 文件发布到 Job Summary (最简单的查看方式)
-      - name: Publish Report
+      - name: Publish Report to Job Summary
         if: always()
         run: |
-          # 假设你的脚本生成了以 AI_Brief 开头的文件
-          cat AI_Brief_*.md >> $GITHUB_STEP_SUMMARY
+          REPORT_FILE=$(find . -name "AI_Brief_*.md" -print -quit) # -quit 找到第一个就退出
+          
+          if [ -n "$REPORT_FILE" ]; then # 检查变量是否非空
+            echo "## AI Daily Report" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat "$REPORT_FILE" >> $GITHUB_STEP_SUMMARY # 使用找到的文件名
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "---" >> $GITHUB_STEP_SUMMARY
+            echo "*此报告仅在 GitHub Actions 运行总结中显示，未推送到仓库。*" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## AI Daily Report - 失败" >> $GITHUB_STEP_SUMMARY
+            echo "### 错误：报告文件 AI_Brief_*.md 未找到！" >> $GITHUB_STEP_SUMMARY
+            echo "请检查 main.py 是否成功执行并生成了报告文件。" >> $GITHUB_STEP_SUMMARY
+            echo "当前目录下文件列表：" >> $GITHUB_STEP_SUMMARY
+            ls -l >> $GITHUB_STEP_SUMMARY # 打印文件列表方便调试
+          fi
